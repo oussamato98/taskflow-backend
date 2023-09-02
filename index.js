@@ -18,7 +18,11 @@ app.use(bodyParser.json());
 
 app.use(express.static("public"));
 
-app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:4000"], // L'origine autorisée
+    methods: ['GET','POST'] , // Méthodes HTTP autorisées
+    credentials: true
+}));
 
 app.use(cookieParser());
 
@@ -34,8 +38,8 @@ app.use(session({
 mongoose.connect("mongodb://127.0.0.1:27017/taskflow", { useNewUrlParser: true });
 
 const userSchema = new mongoose.Schema({
-    name : String,
-    username: String,
+    // name : String,
+    // username: String,
     email:String,
     password: String
 
@@ -51,9 +55,6 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.post('/signup', function (req, res) {
-
-
-
 
     User.register({ email: req.body.email }, req.body.password, function (err, user) {
 
@@ -73,17 +74,54 @@ app.post('/signup', function (req, res) {
                 // console.log()
 
                 // Envoyer le JWT dans la réponse
-                res.cookie('monCookie', 'valeurDuCookie', { maxAge: 3600000, httpOnly: true });
-                res.send('Cookie défini !');
-                console.log(res);
+                // res.cookie('monCookie', 'valeurDuCookie', { httpOnly: false });
+                // res.send('Cookie défini !');
+                // console.log(res);
                 
-                //res.send({ success: true, message: 'Inscription réussie' });
+                res.send({ success: true, message: 'Inscription réussie' });
             });
         }
 
     })
 
 })
+
+app.post('/login', function (req, res) {
+
+
+    const user = new User({
+        email:req.body.email,
+        password:req.body.password
+    })
+
+    req.login(user, function(err) {
+        if (err) {
+             console.log(err);
+             console.log("Is Not logged")
+
+             }
+        else {
+            passport.authenticate("local")(req,res,function(){
+                console.log("Is logged")
+            });
+        }
+      });
+
+})
+
+    app.get('/',function(req,res){
+        //res.send(req.isAuthenticated)
+        console.log(req.session)
+        if(req.isAuthenticated()){
+            console.log("valid=true")
+            res.json({valid:true});
+        }
+        else{
+            console.log("valid=false")
+            res.json({valid:false});
+
+        }
+    })
 
 
 
