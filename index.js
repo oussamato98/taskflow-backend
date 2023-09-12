@@ -19,12 +19,11 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 
 app.use(cors({
-    origin: ["http://localhost:4000"], // L'origine autorisée
-    methods: ['GET','POST'] , // Méthodes HTTP autorisées
-    credentials: true
+    origin:"http://localhost:3000",
+    credentials:true
 }));
 
-app.use(cookieParser());
+
 
 app.use(session({
     secret: 'Oursecret',
@@ -32,17 +31,19 @@ app.use(session({
     saveUninitialized: true
   }))
 
+app.use(cookieParser('Oursecret'));
+
  app.use(passport.initialize());
  app.use(passport.session());
 
 mongoose.connect("mongodb://127.0.0.1:27017/taskflow", { useNewUrlParser: true });
 
 const userSchema = new mongoose.Schema({
-    // name : String,
-    // username: String,
+    name : String,
+    username:String,
     email:String,
     password: String
-
+ 
 });
 
 userSchema.plugin(passportLocalMongoose,{ usernameField: 'email' });
@@ -56,7 +57,14 @@ passport.deserializeUser(User.deserializeUser());
 
 app.post('/signup', function (req, res) {
 
-    User.register({ email: req.body.email }, req.body.password, function (err, user) {
+    const newUser = new User({
+        name:req.body.name,
+        username: req.body.username, 
+        email: req.body.email
+      });
+      console.log(newUser)
+
+    User.register( newUser , req.body.password, function (err, user) {
 
         if (err) {
             console.log(err);
@@ -65,19 +73,7 @@ app.post('/signup', function (req, res) {
         else {
             passport.authenticate("local")(req, res, function () {
 
-                // const secretKey = process.env.SECRET_KEY;
-
-                // const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-
-                // res.cookie('authCookie', token, { maxAge: 3600000, httpOnly: false, secure: false });
-
-                // console.log()
-
-                // Envoyer le JWT dans la réponse
-                // res.cookie('monCookie', 'valeurDuCookie', { httpOnly: false });
-                // res.send('Cookie défini !');
-                // console.log(res);
-                
+               
                 res.send({ success: true, message: 'Inscription réussie' });
             });
         }
@@ -102,28 +98,36 @@ app.post('/login', function (req, res) {
              }
         else {
             passport.authenticate("local")(req,res,function(){
-                console.log("Is logged")
+                
+                res.send("Success")
             });
         }
       });
 
 })
 
-    app.get('/',function(req,res){
-        //res.send(req.isAuthenticated)
-        console.log(req.session)
-        if(req.isAuthenticated()){
-            console.log("valid=true")
-            res.json({valid:true});
+app.get('/logout', function (req, res) {
+
+    req.logout(function (err) {
+        if (err) {
+            console.log(err);
         }
-        else{
-            console.log("valid=false")
-            res.json({valid:false});
+        else {
+
+            res.send("Success");
 
         }
-    })
+    });
+
+});
 
 
+
+app.get('/user', function (req, res) {
+
+res.send(req.user)
+
+});
 
 app.listen(4000, function () {
     console.log("Server is running");
