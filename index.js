@@ -6,8 +6,6 @@ const session = require('express-session');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose')
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
 
 
 const app = express();
@@ -31,7 +29,6 @@ app.use(session({
     saveUninitialized: true
   }))
 
-app.use(cookieParser('Oursecret'));
 
  app.use(passport.initialize());
  app.use(passport.session());
@@ -54,6 +51,31 @@ const User = mongoose.model("User", userSchema);
 passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+
+const etatsProjet = ["actif", "termine", "annule"];
+
+const projetSchema = new mongoose.Schema({
+    id : String,
+    nom:String,
+    evolution: Number,
+    etat: {
+        type: String,
+        enum: etatsProjet,
+        default: "actif" // Vous pouvez définir une valeur par défaut si nécessaire
+    },
+    dateDebut: Date ,
+    dateFin : Date ,
+    
+ 
+});
+
+const Projet = mongoose.model("Projet", projetSchema);
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.post('/signup', function (req, res) {
 
@@ -127,6 +149,29 @@ app.get('/user', function (req, res) {
 
 res.send(req.user)
 
+});
+
+
+
+
+app.post('/addproject', (req, res) => {
+    
+    const nouveauProjet = new Projet({
+        nom: req.body.nom,
+        evolution: req.body.evolution,
+        etat: req.body.etat, // Vous pouvez envoyer l'état depuis le corps de la requête
+        dateDebut: req.body.dateDebut,
+        dateFin: req.body.dateFin
+    });
+    console.log(nouveauProjet);
+    // nouveauProjet.save()
+    //     .then(() => {
+    //         res.status(201).json({ message: 'Projet ajouté avec succès' });
+    //     })
+    //     .catch((err) => {
+    //         console.error('Erreur lors de l\'ajout du projet', err);
+    //         res.status(500).json({ error: 'Erreur lors de l\'ajout du projet' });
+    //     });
 });
 
 app.listen(4000, function () {
