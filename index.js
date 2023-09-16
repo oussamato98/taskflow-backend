@@ -56,7 +56,7 @@ passport.deserializeUser(User.deserializeUser());
 const etatsProjet = ["actif", "termine", "annule"];
 
 const projetSchema = new mongoose.Schema({
-    id : String,
+    
     nom:String,
     evolution: Number,
     etat: {
@@ -64,8 +64,8 @@ const projetSchema = new mongoose.Schema({
         enum: etatsProjet,
         default: "actif" // Vous pouvez définir une valeur par défaut si nécessaire
     },
-    dateDebut: Date ,
-    dateFin : Date ,
+    dateDebut: String ,
+    dateFin : String 
     
  
 });
@@ -154,25 +154,87 @@ res.send(req.user)
 
 
 
-app.post('/addproject', (req, res) => {
+// app.post('/addproject', (req, res) => {
+
+//     let dateD = new Date(req.body.dateDebut).toLocaleDateString()
+//     let dateF = new Date(req.body.dateFin).toLocaleDateString()
     
-    const nouveauProjet = new Projet({
-        nom: req.body.nom,
-        evolution: req.body.evolution,
-        etat: req.body.etat, // Vous pouvez envoyer l'état depuis le corps de la requête
-        dateDebut: req.body.dateDebut,
-        dateFin: req.body.dateFin
-    });
-    console.log(nouveauProjet);
-    // nouveauProjet.save()
-    //     .then(() => {
-    //         res.status(201).json({ message: 'Projet ajouté avec succès' });
-    //     })
-    //     .catch((err) => {
-    //         console.error('Erreur lors de l\'ajout du projet', err);
-    //         res.status(500).json({ error: 'Erreur lors de l\'ajout du projet' });
-    //     });
+//     const nouveauProjet = new Projet({
+//         nom: req.body.nom,
+//         evolution: req.body.evolution,
+//         etat: req.body.etat, // Vous pouvez envoyer l'état depuis le corps de la requête
+//         dateDebut:dateD ,
+//         dateFin: dateF
+//     });
+//     console.log(nouveauProjet);
+//     nouveauProjet.save()
+//         .then(() => {
+//             res.status(201).json({ message: 'Projet ajouté avec succès' });
+//         })
+//         .catch((err) => {
+//             console.error('Erreur lors de l\'ajout du projet', err);
+//             res.status(500).json({ error: 'Erreur lors de l\'ajout du projet' });
+//         });
+// });
+
+
+app.get('/getAllProjects',function(req,res){
+    Projet.find({})
+    .then((rs)=>(res.send(rs)))
+    .catch((err)=>(res.send(err)))
+
+    
 });
+
+app.route("/projects")
+
+    .get((req,res)=>{
+        Projet.find({})
+        .then((rs)=>(res.send(rs)))
+        .catch((err)=>(res.send(err)))
+            
+    })
+ 
+    .post((req, res) => {
+
+        let dateD = new Date(req.body.dateDebut).toLocaleDateString()
+        let dateF = new Date(req.body.dateFin).toLocaleDateString()
+        
+        const nouveauProjet = new Projet({
+            nom: req.body.nom,
+            evolution: req.body.evolution,
+            etat: req.body.etat, // Vous pouvez envoyer l'état depuis le corps de la requête
+            dateDebut:dateD ,
+            dateFin: dateF
+        });
+        console.log(nouveauProjet);
+        nouveauProjet.save()
+            .then(() => {
+                res.status(201).json({ message: 'Projet ajouté avec succès' });
+            })
+            .catch((err) => {
+                console.error('Erreur lors de l\'ajout du projet', err);
+                res.status(500).json({ error: 'Erreur lors de l\'ajout du projet' });
+            });
+
+        
+    })
+
+
+
+app.route("/projects/:id")
+
+ 
+        .delete(function(req,res){
+            Projet.deleteOne({_id:req.params.id})
+            .then((rs)=> res.status(204).send("success"))
+            .catch((err)=> res.send(err))
+
+        })
+
+
+
+        
 
 app.listen(4000, function () {
     console.log("Server is running");
