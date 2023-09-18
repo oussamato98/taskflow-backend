@@ -65,7 +65,12 @@ const projetSchema = new mongoose.Schema({
         default: "actif" // Vous pouvez définir une valeur par défaut si nécessaire
     },
     dateDebut: String ,
-    dateFin : String 
+    dateFin : String ,
+    chef: {
+        type: userSchema, // Utilisation du schéma de l'utilisateur comme sous-schéma
+        default: null // Vous pouvez définir une valeur par défaut si nécessaire
+    },
+    tache:String
     
  
 });
@@ -154,37 +159,9 @@ res.send(req.user)
 
 
 
-// app.post('/addproject', (req, res) => {
-
-//     let dateD = new Date(req.body.dateDebut).toLocaleDateString()
-//     let dateF = new Date(req.body.dateFin).toLocaleDateString()
-    
-//     const nouveauProjet = new Projet({
-//         nom: req.body.nom,
-//         evolution: req.body.evolution,
-//         etat: req.body.etat, // Vous pouvez envoyer l'état depuis le corps de la requête
-//         dateDebut:dateD ,
-//         dateFin: dateF
-//     });
-//     console.log(nouveauProjet);
-//     nouveauProjet.save()
-//         .then(() => {
-//             res.status(201).json({ message: 'Projet ajouté avec succès' });
-//         })
-//         .catch((err) => {
-//             console.error('Erreur lors de l\'ajout du projet', err);
-//             res.status(500).json({ error: 'Erreur lors de l\'ajout du projet' });
-//         });
-// });
 
 
-app.get('/getAllProjects',function(req,res){
-    Projet.find({})
-    .then((rs)=>(res.send(rs)))
-    .catch((err)=>(res.send(err)))
 
-    
-});
 
 app.route("/projects")
 
@@ -199,18 +176,21 @@ app.route("/projects")
 
         let dateD = new Date(req.body.dateDebut).toLocaleDateString()
         let dateF = new Date(req.body.dateFin).toLocaleDateString()
+        console.log(req.user)
         
         const nouveauProjet = new Projet({
             nom: req.body.nom,
             evolution: req.body.evolution,
-            etat: req.body.etat, // Vous pouvez envoyer l'état depuis le corps de la requête
+            etat: req.body.eta, // Vous pouvez envoyer l'état depuis le corps de la requête
             dateDebut:dateD ,
-            dateFin: dateF
+            dateFin: dateF,
+            chef:req.body.chef,
+            tache:'tache1'
         });
         console.log(nouveauProjet);
         nouveauProjet.save()
             .then(() => {
-                res.status(201).json({ message: 'Projet ajouté avec succès' });
+                res.status(201).json({nouveauProjet});
             })
             .catch((err) => {
                 console.error('Erreur lors de l\'ajout du projet', err);
@@ -223,6 +203,15 @@ app.route("/projects")
 
 
 app.route("/projects/:id")
+
+        
+            .get(function(req,res){
+
+                Projet.find({ _id: req.params.id})
+                    .then((rs)=> res.send(rs))
+                    .catch((err)=>res.send(err))
+            })
+       
 
  
         .delete(function(req,res){
