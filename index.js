@@ -161,6 +161,38 @@ app.get("/user", function (req, res) {
     res.send(req.user);
 });
 
+
+app.get("/users",function(req,res){
+
+    User.find({})
+    .then((rs) => res.send(rs))
+    .catch((err) => res.send(err));
+})
+
+app.get("/users/:id", function (req, res) {
+    const userId = req.params.id;
+
+    // Utilisez la méthode findOne pour trouver l'utilisateur par son ID
+    User.findOne({ _id: userId })
+        .then((user) => {
+            if (user) {
+                // Si l'utilisateur est trouvé, renvoyez-le en réponse
+                res.status(200).json(user);
+            } else {
+                // Si l'utilisateur n'est pas trouvé, renvoyez une réponse appropriée
+                res.status(404).json({ message: "Utilisateur non trouvé" });
+            }
+        })
+        .catch((err) => {
+            console.error("Erreur lors de la recherche de l'utilisateur par ID :", err);
+            res.status(500).json({ error: "Erreur lors de la recherche de l'utilisateur par ID" });
+        });
+});
+
+
+
+
+
 app.route("/projects")
 
     .get((req, res) => {
@@ -209,7 +241,54 @@ app.route("/projects/:id")
         Projet.deleteOne({ _id: req.params.id })
             .then((rs) => res.status(204).send("success"))
             .catch((err) => res.send(err));
-    });
+    })
+
+    .patch(function(req,res){
+
+        const projectId = req.params.id ; // Remplacez par l'ID du projet
+        const taskId = req.body.tache; // Remplacez par l'ID de la tâche à supprimer
+        
+        // Utilisez findOneAndUpdate pour mettre à jour le projet
+        Projet.findOneAndUpdate(
+          { _id: projectId }, // Filtre pour trouver le projet par ID
+          { $pull: { tache: taskId } }, // Utilisez $pull pour supprimer l'ID de la tâche du tableau de tâches
+          { new: true } // Cela renverra le projet mis à jour
+        )
+          .then((projet) => {
+            if (!projet) {
+              // Gérez le cas où le projet n'a pas été trouvé
+              console.log("Projet non trouvé");
+              return res.status(404).json({ message: "Projet non trouvé" });
+            }
+        
+            // Le projet a été mis à jour avec la tâche supprimée
+            console.log("Tâche supprimée avec succès");
+            res.status(200).json({ message: "Tâche supprimée avec succès", projet });
+          })
+          .catch((err) => {
+            // Gérez les erreurs éventuelles
+            console.error("Erreur lors de la suppression de la tâche", err);
+            res.status(500).json({ error: "Erreur lors de la suppression de la tâche" });
+          });
+                 
+    })
+
+// Route pour mettre à jour un projet avec une nouvelle tâche
+app.patch("/projectsupdate/:projectId", function (req, res) {
+    const projectId = req.params.projectId;
+
+    // Récupérez les données du projet à partir du corps de la requête
+    const updatedProject = req.body;
+
+    // Effectuez la mise à jour du projet dans votre base de données en utilisant l'ID du projet
+    Projet.findByIdAndUpdate(projectId,updatedProject,{ new: true }) // Ceci renvoie le projet mis à jour après la mise à jour
+        .then((rs) => res.status(200).json(updatedProject))
+        .catch((err) => res.status(500).json({ error: "Erreur lors de la mise à jour du projet" }))
+          
+    
+});
+
+    
 
 
 
