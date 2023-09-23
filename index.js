@@ -195,10 +195,26 @@ app.get("/users/:id", function (req, res) {
 
 app.route("/projects")
 
-    .get((req, res) => {
-        Projet.find({})
-            .then((rs) => res.send(rs))
-            .catch((err) => res.send(err));
+    // .get((req, res) => {
+    //     Projet.find({})
+    //         .then((rs) => res.send(rs))
+    //         .catch((err) => res.send(err));
+    // })
+
+    .get((req,res)=>{
+        const userId = req.query.userId;
+       
+            // Si userId est fourni en tant que paramètre de requête, filtrez par utilisateur
+            Projet.find({ 'chef._id': userId  })
+              .then((projects) => {
+                res.json(projects);
+              })
+              .catch((error) => {
+                console.error("Erreur lors de la récupération des projets :", error);
+                res.status(500).json({ message: "Erreur lors de la récupération des projets" });
+              });
+          
+        console.log(userId);
     })
 
     .post((req, res) => {
@@ -273,6 +289,12 @@ app.route("/projects/:id")
                  
     })
 
+// Modifiez votre route /projects pour renvoyer les projets de l'utilisateur authentifié
+
+
+
+
+
 // Route pour mettre à jour un projet avec une nouvelle tâche
 app.patch("/projectsupdate/:projectId", function (req, res) {
     const projectId = req.params.projectId;
@@ -281,7 +303,10 @@ app.patch("/projectsupdate/:projectId", function (req, res) {
     const updatedProject = req.body;
 
     // Effectuez la mise à jour du projet dans votre base de données en utilisant l'ID du projet
-    Projet.findByIdAndUpdate(projectId,updatedProject,{ new: true }) // Ceci renvoie le projet mis à jour après la mise à jour
+    Projet.findByIdAndUpdate(
+        projectId,
+        updatedProject,
+        { new: true }) // Ceci renvoie le projet mis à jour après la mise à jour
         .then((rs) => res.status(200).json(updatedProject))
         .catch((err) => res.status(500).json({ error: "Erreur lors de la mise à jour du projet" }))
           
@@ -343,6 +368,27 @@ app.route("/taches/:id")
         Tache.find({ _id: req.params.id })
             .then((rs) => res.send(rs))
             .catch((err) => res.send(err));
+    })
+
+    .patch(function (req, res) {
+        const { id } = req.params;
+        const  nouvelEtat  = req.body.etat;
+        console.log(nouvelEtat)
+
+        Tache.findById(id)
+            .then((tache) => {
+                if (!tache) {
+                    return res.status(404).send("Tâche introuvable");
+                }
+
+                // Mettez à jour l'état de la tâche
+                tache.etat = nouvelEtat;
+                console.log(tache.etat)
+                tache.save()
+                    .then(() => res.status(200).send("État de la tâche mis à jour avec succès"))
+                    .catch((err) => res.status(500).send(err));
+            })
+            .catch((err) => res.status(500).send(err));
     })
 
     .delete(function (req, res) {
