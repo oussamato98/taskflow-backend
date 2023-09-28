@@ -103,6 +103,22 @@ const tacheSchema = new mongoose.Schema({
 const Tache = mongoose.model("Tache", tacheSchema);
 
 
+const commentaireSchema = new mongoose.Schema({
+    contenu: String,
+    dateEcriture: String, 
+    like : Number,   
+    ecrivain: {
+        type: userSchema, // Utilisation du schéma de l'utilisateur comme sous-schéma
+        default: null, // Vous pouvez définir une valeur par défaut si nécessaire
+    },
+    tache: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tache'
+    }
+});
+const Commentaire = mongoose.model("Commentaire", commentaireSchema);
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -162,6 +178,9 @@ app.get("/user", function (req, res) {
 });
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 app.get("/users",function(req,res){
 
     User.find({})
@@ -190,6 +209,7 @@ app.get("/users/:id", function (req, res) {
 });
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -289,11 +309,6 @@ app.route("/projects/:id")
                  
     })
 
-// Modifiez votre route /projects pour renvoyer les projets de l'utilisateur authentifié
-
-
-
-
 
 // Route pour mettre à jour un projet avec une nouvelle tâche
 app.patch("/projectsupdate/:projectId", function (req, res) {
@@ -314,6 +329,7 @@ app.patch("/projectsupdate/:projectId", function (req, res) {
 });
 
     
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -398,7 +414,82 @@ app.route("/taches/:id")
     });
 
 
+app.get('/tachesuser',function(req,res){
 
+    const userId = req.query.userId;
+      
+    Tache.find({ 'executeur._id': userId  })
+      .then((taches) => {
+        res.json(taches);
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la récupération des projets :", error);
+        res.status(500).json({ message: "Erreur lors de la récupération des projets" });
+      });
+  
+console.log(userId);
+})
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+app.route("/commentaires")
+
+    .get(function (req, res) {
+
+        Commentaire.find({})
+            .then((rs) =>
+                res.send(rs)
+            )
+            .catch((err) =>
+                res.send(err));
+
+    })
+
+    .post(function (req, res) {
+        let localDate = new Date().toLocaleDateString();
+
+        const nouveauCommentaire = new Commentaire( {
+            contenu: req.body.contenu,
+            dateEcriture: localDate,    
+            ecrivain: req.body.ecrivain,
+            tache: req.body.tache,
+            like:req.body.like
+        })
+        console.log(nouveauCommentaire)
+        nouveauCommentaire
+        .save()
+        .then(() => {
+            res.status(201).json({ nouveauCommentaire });
+        })
+        .catch((err) => {
+            console.error("Erreur lors de l'ajout du commentaire", err);
+            res.status(500).json({
+                error: "Erreur lors de l'ajout du commentaire ",
+            });
+        });
+
+    })
+
+    .patch(function(req,res){
+
+        console.log(req.body)
+        // Commentaire.findByIdAndUpdate(
+        //     commentId,
+        //     { $set: { like: newLikeValue } }, // Utilisez l'opérateur $set pour mettre à jour le champ 'like'
+        //     { new: true }, // Cela renverra le commentaire mis à jour au lieu de l'ancien
+        //     (err, updatedComment) => {
+        //       if (err) {
+        //         console.error('Erreur lors de la mise à jour du commentaire :', err);
+        //         return res.status(500).json({ message: 'Erreur lors de la mise à jour du commentaire' });
+        //       }
+        //       return res.status(200).json(updatedComment);
+        //     }
+        //   );
+    })
+
+    
 
 
 
