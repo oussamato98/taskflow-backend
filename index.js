@@ -472,24 +472,56 @@ app.route("/commentaires")
 
     })
 
-    .patch(function(req,res){
-
-        console.log(req.body)
-        // Commentaire.findByIdAndUpdate(
-        //     commentId,
-        //     { $set: { like: newLikeValue } }, // Utilisez l'opérateur $set pour mettre à jour le champ 'like'
-        //     { new: true }, // Cela renverra le commentaire mis à jour au lieu de l'ancien
-        //     (err, updatedComment) => {
-        //       if (err) {
-        //         console.error('Erreur lors de la mise à jour du commentaire :', err);
-        //         return res.status(500).json({ message: 'Erreur lors de la mise à jour du commentaire' });
-        //       }
-        //       return res.status(200).json(updatedComment);
-        //     }
-        //   );
-    })
+   
 
     
+// Route pour ajouter un like à un commentaire
+app.patch('/commentaires/:commentaireId/like', (req, res) => {
+    const commentaireId = req.params.commentaireId;
+  
+    // Vous pouvez utiliser Mongoose pour trouver le commentaire par son ID
+    Commentaire.findByIdAndUpdate(
+      commentaireId,
+      { $inc: { like: 1 } }, // Incrémentez le nombre de likes de 1
+      { new: true })
+      .then((commentaire)=> res.status(200).json(commentaire))
+      .catch(()=> res.status(500).json({ error: "Erreur lors de l'ajout du like" }))
+      
+   
+  });
+
+// Route pour supprimer un like d'un commentaire
+app.patch('/commentaires/:commentaireId/dislike', (req, res) => {
+    const commentaireId = req.params.commentaireId;
+  
+    // Vous pouvez utiliser Mongoose pour trouver le commentaire par son ID
+    Commentaire.findByIdAndUpdate(
+      commentaireId,
+      { $inc: { like: -1 } }, // Décrémentez le nombre de likes de 1
+      { new: true }) // Renvoyez le commentaire mis à jour
+      .then((commentaire)=> res.status(200).json(commentaire))
+      .catch(()=> res.status(500).json({ error: "Erreur lors de l'ajout du like" }))
+  
+  });
+
+
+  app.route("/commentaires/:id")
+        // cette methode pour recupere les commentaires d une tache passe en argument
+        .get(function (req, res) {
+           console.log(req.params.id)
+           Commentaire.find({ tache: req.params.id })
+           .then((rs)=> res.send(rs))
+           .catch((err)=>res.send(err))
+        })
+
+        .delete(function (req, res) {
+            console.log(req.params.id)
+            Commentaire.deleteOne({ _id: req.params.id })
+                .then((rs) => res.status(204).send("success"))
+                .catch((err) => res.send(err));
+        });
+
+  
 
 
 
