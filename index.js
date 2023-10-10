@@ -119,6 +119,24 @@ const commentaireSchema = new mongoose.Schema({
 const Commentaire = mongoose.model("Commentaire", commentaireSchema);
 
 
+const notificationSchema = new mongoose.Schema({
+    contenu: String,
+    dateEcriture: String, 
+    emetteur: {
+        type: userSchema, // Utilisation du schéma de l'utilisateur comme sous-schéma
+        default: null, // Vous pouvez définir une valeur par défaut si nécessaire
+    },
+    destinataire: {
+        type: userSchema, // Utilisation du schéma de l'utilisateur comme sous-schéma
+        default: null, // Vous pouvez définir une valeur par défaut si nécessaire
+    }
+
+});
+
+const Notification = mongoose.model("Notification", notificationSchema);
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -211,15 +229,27 @@ app.get("/users/:id", function (req, res) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+app.get("/chefprojet/:id", function (req, res) {
+    const projectId = req.params.id;
+  
+    Projet.findById(projectId) // Recherche le projet par ID
+      .populate("chef") // Peuple le champ "chef" avec les détails de l'utilisateur
+      .then((project) => {
+        if (!project) {
+          // Si le projet n'est pas trouvé, renvoyer une réponse 404
+          return res.status(404).send("Projet non trouvé");
+        }
+  
+        // Renvoyer le chef de projet du projet spécifique
+        res.send(project.chef);
+      })
+      .catch((err) => res.status(500).send(err));
+  });
 
-
+  
 app.route("/projects")
 
-    // .get((req, res) => {
-    //     Projet.find({})
-    //         .then((rs) => res.send(rs))
-    //         .catch((err) => res.send(err));
-    // })
+
 
     .get((req,res)=>{
         const userId = req.query.userId;
@@ -521,7 +551,103 @@ app.patch('/commentaires/:commentaireId/dislike', (req, res) => {
                 .catch((err) => res.send(err));
         });
 
-  
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+app.route("/notifications")
+
+    .get(function (req, res) {
+
+        Notification.find({})
+            .then((rs) =>
+                res.send(rs)
+            )
+            .catch((err) =>
+                res.send(err));
+
+    })
+
+    .post(function (req, res) {
+        console.log(req.body)
+        let localDate = new Date().toLocaleDateString();
+
+        const newNotification = new Notification( {
+            contenu: "Nouvelle Tache cree pour vous par "+req.body.emetteur.name,
+            dateEcriture: localDate,    
+            emetteur: req.body.emetteur,
+            destinataire: req.body.destinataire,
+
+
+        })
+        console.log(newNotification)
+        newNotification
+        .save()
+        .then(() => {
+            res.status(201).json({ newNotification });
+        })
+        .catch((err) => {
+            console.error("Erreur lors de l'ajout du notification", err);
+            res.status(500).json({
+                error: "Erreur lors de l'ajout du notification ",
+            });
+        });
+
+    })
+
+
+app.post("/notificationtovalidate", function (req, res) {
+    console.log(req.body);
+    let localDate = new Date().toLocaleDateString();
+
+    const newNotification = new Notification( {
+        contenu: "Nouvelle Tache a valider pour "+req.body.emetteur.name,
+        dateEcriture: localDate,    
+        emetteur: req.body.emetteur,
+        destinataire: req.body.destinataire,
+
+
+
+    })
+    console.log(newNotification)
+    newNotification
+    .save()
+    .then(() => {
+        res.status(201).json({ newNotification });
+    })
+    .catch((err) => {
+        console.error("Erreur lors de l'ajout du notification", err);
+        res.status(500).json({
+            error: "Erreur lors de l'ajout du notification ",
+        });
+    });
+})
+
+app.post("/notificationvalidate", function (req, res) {
+    console.log(req.body);
+    let localDate = new Date().toLocaleDateString();
+
+    const newNotification = new Notification( {
+        contenu: "Tache  valide par "+req.body.emetteur.name,
+        dateEcriture: localDate,    
+        emetteur: req.body.emetteur,
+        destinataire: req.body.destinataire,
+
+    })
+    console.log(newNotification)
+    newNotification
+    .save()
+    .then(() => {
+        res.status(201).json({ newNotification });
+    })
+    .catch((err) => {
+        console.error("Erreur lors de l'ajout du notification", err);
+        res.status(500).json({
+            error: "Erreur lors de l'ajout du notification ",
+        });
+    });
+})
 
 
 
