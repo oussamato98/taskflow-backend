@@ -7,6 +7,7 @@ const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const cors = require("cors");
 
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -28,6 +29,7 @@ app.use(
         saveUninitialized: true,
     })
 );
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -180,6 +182,8 @@ app.post("/login", function (req, res) {
         }
     });
 });
+
+
 
 app.get("/logout", function (req, res) {
     req.logout(function (err) {
